@@ -1,6 +1,6 @@
 let isAuthed = false;
-let selected = null;        // الصراف المختار
-let visitedSet = new Set(); // atm_id التي تمت زيارتها
+let selected = null;
+let visitedSet = new Set();
 
 const el = (id) => document.getElementById(id);
 
@@ -34,26 +34,28 @@ function setInspectorId(v) {
   localStorage.setItem("inspector_id", v);
 }
 
-
 async function loadAtms() {
   const inspectorId = getInspectorId();
   if (!inspectorId) return [];
 
   const { data, error } = await window.sb
     .from("atms")
-    .select("atm_id, bank, city, lat, lng, inspector_id")
+    .select("atm_id, bank, city, lat, lng, date, inspector_id")
     .eq("inspector_id", inspectorId);
 
   if (error) throw error;
   return data ?? [];
 }
 
-
 async function loadVisits() {
-  // تقدروا لاحقًا تفلترها حسب inspector_id بعد ما نضيفه للزيارات
+  const inspectorId = getInspectorId();
+  if (!inspectorId) return [];
+
   const { data, error } = await window.sb
     .from("atm_visits")
-    .select("atm_id, request_no");
+    .select("atm_id, request_no, inspector_id")
+    .eq("inspector_id", inspectorId);
+
   if (error) throw error;
   return data ?? [];
 }
@@ -63,111 +65,112 @@ function refreshStats(total) {
   if (el("visitedCount")) el("visitedCount").textContent = String(visitedSet.size);
 }
 
-(async function main() {
-  // خريطة السعودية تقريبًا
-  const map = L.map("map").setView([23.8859, 45.0792], 6);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19
-  }).addTo(map);
-
+async function renderData(map) {
   setMsg("statusMsg", "جاري تحميل البيانات…", true);
+  enableControls(false);
 
-  /* ========= تفعيل كود المراقب ========= */
-  const insBtn = el("insBtn");
-  const insCodeInput = el("insCode");
-  const insMsg = el("insMsg");
+  // تصفير واجهة الاختيار
+  selected = null;
+  if (el("selectedAtm")) el("selectedAtm").textContent = "—";
+  if (el("selectedCity")) el("selectedCity").textContent = "—";
+  if (el("selectedBank")) el("selectedBank").textContent = "—";
+  if (el("selectedDate")) el("selectedDate").textContent = "—";
 
-  // لو سبق اختار كود، نعرضه
-  const currentIns = getInspectorId();
-  if (insCodeInput && currentIns) insCodeInput.value = currentIns;
-
-  if (insBtn) {
-    insBtn.addEventListener("click", () => {
-      const v = (insCodeInput?.value || "").trim().toUpperCase();
-      if (!["A", "B"].includes(v)) {
-        if (insMsg) insMsg.textContent = "الكود لازم يكون A أو B";
-        return;
-      }
-      setInspectorId(v);
-      if (insMsg) insMsg.textContent = `تم التفعيل ✅ (المراقب ${v})`;
-      location.reload();
-    });
-  }
-  /* ==================================== */
-
-  // إذا ما اختار كود، نوقف هنا
-  if (!getInspectorId()) {
-    setMsg("statusMsg", "اختاري كود المراقب أولاً (A أو B).", false);
-    enableControls(false);
-    return;
-  }
-
-  // تحميل الصرافات + الزيارات
   let atms = [];
   try {
     const [a, v] = await Promise.all([loadAtms(), loadVisits()]);
     atms = a;
-    visitedSet = new Set((v ?? []).map(x => x.atm_id));
+    visitedSet = new Set((v ?? []).map((x) => x.atm_id));
     refreshStats(atms.length);
   } catch (e) {
     setMsg("statusMsg", `فشل تحميل البيانات: ${e.message ?? e}`, false);
+    refreshStats(0);
     return;
   }
 
+  // تنظيف الماركرز القديمة (لو فيه رندر سابق)
+  if (window._atmLayer) {
+    window._atmLayer.clearLayers();
+  } else {
+    window._atmLayer = L.layerGroup().addTo(map);
+  }
+
   // رسم الصرافات
-  atms.forEach(a => {
+  atms.forEach((a) => {
     const isVisited = visitedSet.has(a.atm_id);
 
     const marker = L.marker([a.lat, a.lng], { opacity: isVisited ? 0.5 : 1.0 })
-      .addTo(map)
+      .addTo(window._atmLayer)
       .on("click", () => {
         selected = a;
 
         if (el("selectedAtm")) el("selectedAtm").textContent = a.atm_id;
         if (el("selectedCity")) el("selectedCity").textContent = a.city ?? "—";
         if (el("selectedBank")) el("selectedBank").textContent = a.bank ?? "—";
+        if (el("selectedDate")) el("selectedDate").textContent = a.date ?? "—";
 
         if (isAuthed) enableControls(true);
 
         if (visitedSet.has(a.atm_id)) {
           setMsg("statusMsg", "هذا الصراف مسجل مسبقًا.", false);
         } else {
-          setMsg("statusMsg", "--", true);
+          setMsg("statusMsg", "جاهز لإدخال رقم الزيارة.", true);
         }
       });
 
     marker.bindTooltip(`${a.bank ?? ""} - ${a.city ?? ""}`.trim() || a.atm_id);
   });
 
-  setMsg("statusMsg", "تم التحميل البيانات", true);
+  setMsg("statusMsg", "تم تحميل البيانات ✅", true);
 
-  // PIN
-  if (el("pinBtn")) {
-   el("pinBtn").addEventListener("click", () => {
-  const pin = (el("pin").value ?? "").trim();
-
-  const pins = window.APP_CONFIG.INSPECTOR_PINS || {};
-  const matched = Object.entries(pins).find(([_, p]) => String(p) === pin);
-
-  if (matched) {
-    const inspectorId = matched[0]; // A أو B
-    setInspectorId(inspectorId);
-
-    isAuthed = true;
-    setMsg("pinMsg", `تم الدخول ✅ (المراقب ${inspectorId})`, true);
-
-    // فعّل الأدوات إذا تم اختيار صراف
-    if (selected) enableControls(true);
-
-    // أعد تحميل البيانات لتطلع نقاطه
-    location.reload();
-  } else {
-    isAuthed = false;
-    enableControls(false);
-    setMsg("pinMsg", "PIN غير صحيح", false);
+  // زوم على أول نقطة
+  if (atms.length) {
+    map.setView([atms[0].lat, atms[0].lng], 11);
   }
-});
+}
 
+(async function main() {
+  // الخريطة
+  const map = L.map("map").setView([23.8859, 45.0792], 6);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19
+  }).addTo(map);
+
+  // بالبداية عطّلي الأدوات لين يصير دخول
+  enableControls(false);
+
+  // ✅ أهم تعديل: لا نسمح بعرض نقاط تلقائيًا حتى لو فيه inspector_id قديم
+  localStorage.removeItem("inspector_id");
+  isAuthed = false;
+
+  // تأكيد رسائل البداية
+  setMsg("pinMsg", "", true);
+  setMsg("statusMsg", "ادخلي PIN عشان تظهر النقاط.", false);
+
+  // PIN (هو اللي يحدد A/B)
+  if (el("pinBtn")) {
+    el("pinBtn").addEventListener("click", async () => {
+      const pin = (el("pin").value ?? "").trim();
+      const pins = window.APP_CONFIG?.INSPECTOR_PINS || {};
+
+      const matched = Object.entries(pins).find(([_, p]) => String(p) === pin);
+
+      if (!matched) {
+        isAuthed = false;
+        enableControls(false);
+        setMsg("pinMsg", "PIN غير صحيح", false);
+        setMsg("statusMsg", "ادخلي PIN صحيح عشان تظهر نقاطك.", false);
+        return;
+      }
+
+      const inspectorId = matched[0]; // A أو B
+      setInspectorId(inspectorId);
+
+      isAuthed = true;
+      setMsg("pinMsg", "تم الدخول ✅", true);
+
+      await renderData(map);
+    });
   }
 
   // فتح قوقل ماب
@@ -178,14 +181,14 @@ function refreshStats(total) {
     });
   }
 
-  // حفظ رقم الطلب
+  // حفظ رقم الزيارة
   if (el("saveBtn")) {
     el("saveBtn").addEventListener("click", async () => {
       if (!selected) return;
 
       const requestNo = normalizeRequestNo(el("requestNo")?.value);
       if (!requestNo) {
-        setMsg("statusMsg", "رقم الطلب الزامي.", false);
+        setMsg("statusMsg", "رقم الزيارة الزامي.", false);
         return;
       }
 
@@ -215,9 +218,12 @@ function refreshStats(total) {
       }
 
       visitedSet.add(selected.atm_id);
-      refreshStats(atms.length);
 
-      setMsg("statusMsg", "تم الحفظ", true);
+      // تحديث العداد بدون خبصة
+      const total = Number(el("totalCount")?.textContent || 0);
+      refreshStats(total);
+
+      setMsg("statusMsg", "تم الحفظ ✅", true);
       if (el("requestNo")) el("requestNo").value = "";
       el("saveBtn").disabled = false;
     });
