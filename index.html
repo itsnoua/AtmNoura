@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>زيارة الصرافات</title>
 
-  <!-- Leaflet (خريطة) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <link rel="stylesheet" href="assets/style.css"/>
@@ -17,8 +16,7 @@
 
   <aside class="panel">
     <h2>Good luck (>'-'<)</h2>
-    <p class="hint">
-    </p>
+    <p class="hint"></p>
 
     <div class="card">
       <label>PIN</label>
@@ -37,20 +35,29 @@
 
       <button id="gmapsBtn" class="btn" disabled>Google Map</button>
 
-      <label style="margin-top:10px;">رقم الزيارة </label>
-     <input id="requestNo"
-       placeholder=""
-       inputmode="latin"
-       autocapitalize="characters"
-       autocomplete="off"
-       spellcheck="false"
-       disabled />
+      <label style="margin-top:10px;">رقم الزيارة</label>
 
+      <div class="visitWrap">
+        <div class="visitPrefix">INS-</div>
+        <input
+          id="requestNo"
+          placeholder="8 أرقام"
+          inputmode="numeric"
+          maxlength="8"
+          autocomplete="off"
+          spellcheck="false"
+          disabled
+        />
+      </div>
+
+      <div class="checkRow" id="notFoundRow">
+        <label for="notFoundChk">غير موجود على الطبيعة</label>
+        <input id="notFoundChk" type="checkbox" disabled />
+      </div>
 
       <button id="saveBtn" class="btn primary" disabled>حفظ</button>
       <div id="statusMsg" class="msg"></div>
     </div>
-
 
     <div class="card stats">
       <div>الاجمالي: <b id="totalCount">0</b></div>

@@ -1,37 +1,72 @@
-html, body { height: 100%; margin: 0; font-family: system-ui, Arial, sans-serif; }
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+}
+
 * { box-sizing: border-box; }
+
+:root{
+  --panelW: 380px;
+  --border: #eee;
+  --bg: #fff;
+  --cardBg: #fafafa;
+  --text: #111;
+  --muted: #666;
+  --ok: #0a7;
+  --bad: #c00;
+}
 
 .layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr var(--panelW);
   height: 100vh;
 }
 
-#map { height: 100%; width: 100%; }
+#map {
+  height: 100%;
+  width: 100%;
+  touch-action: pan-x pan-y; 
+}
 
-/* panel */
 .panel {
-  border-left: 1px solid #eee;
+  border-left: 1px solid var(--border);
   padding: 12px;
   overflow: auto;
-  background: #fff;
+  background: var(--bg);
+  -webkit-overflow-scrolling: touch;
 }
 
 h2 { margin: 6px 0 10px; }
 
-.hint { color: #555; font-size: 13px; line-height: 1.5; margin-top: -6px; }
+.hint {
+  color: #555;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: -6px;
+}
 
 .card {
-  border: 1px solid #eee;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
   margin-top: 10px;
-  background: #fafafa;
+  background: var(--cardBg);
 }
 
-.row { display: grid; grid-template-columns: 1fr 90px; gap: 8px; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 8px;
+  align-items: center;
+}
 
-label { display: block; margin-top: 8px; font-size: 13px; color: #333; }
+label {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #333;
+}
 
 input, button {
   width: 100%;
@@ -39,34 +74,130 @@ input, button {
   border-radius: 12px;
   border: 1px solid #ddd;
   outline: none;
-  font-size: 16px; /* مهم للجوال: يمنع زووم تلقائي في iOS */
+  font-size: 16px; 
+  background: #fff;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+input:disabled {
+  background: #f3f3f3;
+  color: #888;
 }
 
 .btn { cursor: pointer; background: #fff; }
 .btn.primary { background: #111; color: #fff; border-color: #111; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.kv { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
-.kv span { color: #666; }
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0;
+}
+.kv span { color: var(--muted); }
 
 .msg { margin-top: 8px; font-size: 13px; min-height: 18px; }
 .stats { display: flex; justify-content: space-between; background: #fff; }
 
 .footer { display: block; margin-top: 10px; color: #777; }
 
-/* ✅ وضع الجوال */
+
+.visitWrap{
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.visitPrefix{
+  height: 46px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #444;
+  font-weight: 700;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+#requestNo{
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.checkRow label{
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+#notFoundChk{
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  accent-color: #111; 
+}
+
+#notFoundChk:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkRow.checked{
+  border-color: #bbb;
+  background: #f7f7f7;
+}
+
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
-    grid-template-rows: 58vh 42vh; /* الخريطة فوق + لوحة تحت */
+    grid-template-rows: 56vh 44vh; 
   }
 
   .panel {
     border-left: none;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border);
     padding-bottom: 24px;
   }
 
-  /* خليه سهل باللمس */
   .row { grid-template-columns: 1fr 110px; }
+
+  .visitWrap{
+    grid-template-columns: 84px 1fr;
+  }
+
+  .leaflet-control-zoom a{
+    width: 42px;
+    height: 42px;
+    line-height: 42px;
+    font-size: 18px;
+  }
 }
+.leaflet-marker-icon.marker-visited{
+  filter: hue-rotate(170deg) saturate(280%) brightness(0.95) !important; 
+}
+
+.leaflet-marker-icon.marker-notfound{
+  filter: grayscale(100%) brightness(0.85) !important; 
+}
+.leaflet-marker-icon.marker-visited{ outline: 4px solid red !important; }
