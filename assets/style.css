@@ -1,0 +1,72 @@
+html, body { height: 100%; margin: 0; font-family: system-ui, Arial, sans-serif; }
+* { box-sizing: border-box; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  height: 100vh;
+}
+
+#map { height: 100%; width: 100%; }
+
+/* panel */
+.panel {
+  border-left: 1px solid #eee;
+  padding: 12px;
+  overflow: auto;
+  background: #fff;
+}
+
+h2 { margin: 6px 0 10px; }
+
+.hint { color: #555; font-size: 13px; line-height: 1.5; margin-top: -6px; }
+
+.card {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+  background: #fafafa;
+}
+
+.row { display: grid; grid-template-columns: 1fr 90px; gap: 8px; }
+
+label { display: block; margin-top: 8px; font-size: 13px; color: #333; }
+
+input, button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  outline: none;
+  font-size: 16px; /* مهم للجوال: يمنع زووم تلقائي في iOS */
+}
+
+.btn { cursor: pointer; background: #fff; }
+.btn.primary { background: #111; color: #fff; border-color: #111; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.kv { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0; }
+.kv span { color: #666; }
+
+.msg { margin-top: 8px; font-size: 13px; min-height: 18px; }
+.stats { display: flex; justify-content: space-between; background: #fff; }
+
+.footer { display: block; margin-top: 10px; color: #777; }
+
+/* ✅ وضع الجوال */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 58vh 42vh; /* الخريطة فوق + لوحة تحت */
+  }
+
+  .panel {
+    border-left: none;
+    border-top: 1px solid #eee;
+    padding-bottom: 24px;
+  }
+
+  /* خليه سهل باللمس */
+  .row { grid-template-columns: 1fr 110px; }
+}

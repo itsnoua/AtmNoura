@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>زيارة الصرافات</title>
+
+  <!-- Leaflet (خريطة) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+
+<div class="layout">
+  <div id="map"></div>
+
+  <aside class="panel">
+    <h2>Good luck (>'-'<)</h2>
+    <p class="hint">
+    </p>
+
+    <div class="card">
+      <label>PIN</label>
+      <div class="row">
+        <input id="pin" type="password" placeholder="ادخل الرقم" />
+        <button id="pinBtn" class="btn">🌸</button>
+      </div>
+      <div id="pinMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <div class="kv"><span>ID :</span><b id="selectedAtm">—</b></div>
+      <div class="kv"><span>المدينة:</span><b id="selectedCity">—</b></div>
+      <div class="kv"><span>البنك:</span><b id="selectedBank">—</b></div>
+      <div class="kv"><span>تاريخ التشغيل :</span><b id="selectedate">—</b></div>
+
+      <button id="gmapsBtn" class="btn" disabled>Google Map</button>
+
+      <label style="margin-top:10px;">رقم الزيارة </label>
+     <input id="requestNo"
+       placeholder=""
+       inputmode="latin"
+       autocapitalize="characters"
+       autocomplete="off"
+       spellcheck="false"
+       disabled />
+
+
+      <button id="saveBtn" class="btn primary" disabled>حفظ</button>
+      <div id="statusMsg" class="msg"></div>
+    </div>
+
+
+    <div class="card stats">
+      <div>الاجمالي: <b id="totalCount">0</b></div>
+      <div>تمت زيارتها: <b id="visitedCount">0</b></div>
+    </div>
+
+    <small class="footer">🌸🌸Noura Dina ©</small>
+  </aside>
+</div>
+
+<!-- Supabase -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="js/config.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
